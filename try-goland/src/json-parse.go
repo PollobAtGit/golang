@@ -9,77 +9,44 @@ import (
 
 type Role int
 
+type Employee struct {
+	JobRole Role   `json:"job_role"`
+	Name    string `json:"name"`
+}
+
 const (
-	// _                    Role = iota
-	cook                 Role = iota
-	softwareEngineer     Role = iota
-	manager              Role = iota
-	chiefTechnicalOffice Role = iota
+	_    Role = iota
+	Cook Role = iota
+	CTO  Role = iota
 )
 
-type Employee struct {
-	Role Role   `json:"role"`
-	// name string // `json:"name"`
+var roleMap = map[Role]string{
+	Cook: "Cook",
+	CTO:  "Chief technical officer",
 }
 
-func (r Role) string() (string, error) {
+func (e Role) MarshalJSON() ([]byte, error) {
 
-	roles := []string{
-		"Cook",
-		"Software engineer",
-		"Manger",
-		"Chief technical officer",
-	}
-
-	i := int(r) - 1
-
-	if i >= 0 && i < len(roles) {
-		return roles[i], nil
-	}
-
-	return "", errors.New("unknow role")
-}
-
-func (e Employee) MarshalJSON() ([]byte, error) {
-
-	if rStr, rOk := e.Role.string(); rOk == nil {
+	if v, ok := roleMap[e]; ok {
 
 		b := bytes.NewBufferString(`"`)
 
-		fmt.Println(rStr)
-		b.WriteString(rStr)
-
+		b.WriteString(v)
 		b.WriteString(`"`)
+
 		return b.Bytes(), nil
-	} else {
-		// fmt.Println(rOk)
 	}
 
-	return nil, errors.New("Couldn't marshal employee role")
-}
-
-func (g *Role) UnmarshalJSON(b []byte) error {
-	var j string
-	if err := json.Unmarshal(b, &j); err != nil {
-		return err
-	}
-	*g = chiefTechnicalOffice
-	return nil
+	return nil, errors.New("Can't parse to json for " + string(e))
 }
 
 func main() {
 
-	fmt.Println(manager)
-	fmt.Println(chiefTechnicalOffice)
-	fmt.Println(softwareEngineer)
-	fmt.Println(cook)
+	e := Employee{JobRole: CTO, Name: "tim"}
 
-	e := Employee{name: "toufiq", Role: manager}
-
-	if employeeJson, mOk := json.MarshalIndent(e, "", "	"); mOk == nil {
-		fmt.Println(employeeJson)
-		fmt.Println(string(employeeJson))
+	if prettyJson, ok := json.MarshalIndent(e, "", "	"); ok == nil {
+		fmt.Println(string(prettyJson))
 	} else {
-		fmt.Println(mOk)
+		fmt.Println(ok)
 	}
 }
